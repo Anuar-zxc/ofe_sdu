@@ -1,7 +1,7 @@
 import { createContext, useContext, type AnchorHTMLAttributes, type MouseEvent, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 
-export type Page = 'home' | 'about' | 'startups' | 'profile' | 'teams' | 'events' | 'news' | 'demo' | 'apply' | 'admin' | 'media' | 'policy'
+export type Page = 'home' | 'about' | 'startups' | 'profile' | 'teams' | 'events' | 'news' | 'demo' | 'register' | 'apply' | 'admin' | 'media' | 'policy'
 export type Route = { page: Page; id?: string; hash?: string }
 export type Go = (page: Page, id?: string, hash?: string) => void
 
@@ -18,6 +18,7 @@ export function parseLocation(location: Pick<Location, 'pathname' | 'hash'>): Ro
     case 'projects': return second ? { page: 'profile', id: second } : { page: 'startups', hash }
     case 'teams': return { page: 'teams' }
     case 'events':
+      if (second === 'founders-cup' && third === 'register') return { page: 'register' }
       if (second === 'founders-cup') return { page: 'demo', hash }
       if (second === 'news' && third) return { page: 'news', id: third }
       return { page: 'events', id: second && !reserved.has(second) ? second : undefined, hash }
@@ -33,7 +34,7 @@ export function pathFor(page: Page, id?: string, hash?: string) {
   const encoded = id ? encodeURIComponent(id) : ''
   const base = {
     home: '/', about: '/about', startups: '/projects', profile: `/projects/${encoded}`, teams: '/teams',
-    events: id ? `/events/${encoded}` : '/events', news: `/events/news/${encoded}`, demo: '/events/founders-cup',
+    events: id ? `/events/${encoded}` : '/events', news: `/events/news/${encoded}`, demo: '/events/founders-cup', register: '/events/founders-cup/register',
     apply: '/workspace', admin: '/admin', media: '/media', policy: '/policies',
   }[page]
   return hash ? `${base}#${hash}` : base

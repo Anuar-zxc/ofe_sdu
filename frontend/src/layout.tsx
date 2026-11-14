@@ -34,7 +34,8 @@ export const menu: MenuGroup[] = [
       { label: 'Hackathons', to: 'events', id: 'hackathons', icon: 'code', note: 'Build in a weekend' },
       { label: 'Championships', to: 'events', id: 'championships', icon: 'briefcase', note: 'Case and business competitions' },
       { label: 'Winners & champions', to: 'events', id: 'champions', icon: 'trophy', note: 'Students who won' },
-      { label: 'SDU Founders Cup', to: 'demo', icon: 'sparkle', note: 'Next Demo Day' },
+      { label: 'SDU Founders Cup', to: 'demo', icon: 'sparkle', note: '21 November · Demo Day' },
+      { label: 'Team registration', to: 'register', icon: 'flag', note: 'Register for Founders Cup' },
     ],
     feature: { image: '/demo-day/IMG_7414.webp', title: 'SDU Founders Cup', to: 'demo' },
   },
@@ -68,6 +69,7 @@ function AccountMenu() {
         <button type="button" onClick={() => open('My applications')}><Icon name="send" size={18} />{t('My applications')}</button>
         <button type="button" onClick={() => open('My startup')}><Icon name="bulb" size={18} />{t('My startup')}</button>
         <button type="button" onClick={() => open('My teams')}><Icon name="users" size={18} />{t('My teams')}</button>
+        <button type="button" onClick={() => { close(); go('register') }}><Icon name="flag" size={18} />{t('Founders Cup registration')}</button>
       </>}
       {isMediaEditor && <button type="button" onClick={() => { close(); go('media') }}><Icon name="megaphone" size={18} />{t('Media desk')}</button>}
       {isAdmin && <button type="button" onClick={() => { close(); go('admin') }}><Icon name="grid" size={18} />{t('Workspace management')}</button>}
@@ -104,7 +106,7 @@ export function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) =>
     window.addEventListener('keydown', onKey)
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = overflow }
   }, [drawer])
-  const sectionActive = (group: MenuGroup) => group.to === route.page || group.links.some(link => link.to === route.page) || (group.to === 'events' && ['news', 'demo'].includes(route.page)) || (group.to === 'startups' && route.page === 'profile')
+  const sectionActive = (group: MenuGroup) => group.to === route.page || group.links.some(link => link.to === route.page) || (group.to === 'events' && ['news', 'demo', 'register'].includes(route.page)) || (group.to === 'startups' && route.page === 'profile')
   const audience: { label: string; to: Page; id?: string }[] = [
     { label: 'For students', to: 'apply' }, { label: 'For teams', to: 'teams' }, { label: 'For media', to: 'media' }, { label: 'For partners', to: 'about' },
   ]

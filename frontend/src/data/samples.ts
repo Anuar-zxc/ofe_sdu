@@ -19,7 +19,7 @@ export const sampleSubmissions: Submission[] = sampleStartups.map(([, name, desc
 }))
 
 export const sampleEvents: EventData[] = [
-  { id: 'current', title: 'SDU FOUNDERS CUP', date: '2026-11-25', place: 'Venue to be confirmed', published: true },
+  { id: 'current', title: 'SDU FOUNDERS CUP', date: '2026-11-21', place: 'Venue to be confirmed', published: true },
   { id: 'archive', title: 'Our first Demo Day', date: '', place: 'Details to be added', published: true },
 ]
 
@@ -29,12 +29,12 @@ export type LocalizedNews = NewsPost & { i18n?: Partial<Record<Lang, Copy>> }
 export const sampleNews: LocalizedNews[] = [
   {
     id: 'founders-cup-2026', category: 'business', date: '2026-11-04', published: true, pinned: true, cover: '/demo-day/IMG_7414.webp',
-    title: 'SDU Founders Cup takes place on 25 November',
-    excerpt: 'Student founders will present their projects on stage. Follow the event page for the venue and registration.',
-    body: 'SDU Founders Cup is the next Demo Day of the Office for Entrepreneurship. Student teams will present their projects to the university community, mentors and guests.\n\nThe event takes place on 25 November 2026. The venue will be confirmed on the event page, together with the registration link.\n\nWant to take part? Add your project to the catalog and submit it for review.',
+    title: 'SDU Founders Cup takes place on 21 November',
+    excerpt: 'Student founders will present their projects on stage. Team registration is open on the event page.',
+    body: 'SDU Founders Cup is the next Demo Day of the Office for Entrepreneurship. Student teams will present their projects to the university community, mentors and guests.\n\nThe event takes place on 21 November 2026. The venue will be confirmed on the event page.\n\nWant to take part? Register your team on the event page: add teammates by their SDU emails, describe the product and upload your presentation.',
     i18n: {
-      RU: { title: 'SDU Founders Cup пройдёт 25 ноября', excerpt: 'Студенты-основатели представят свои проекты на сцене. Место и регистрация — на странице события.', body: 'SDU Founders Cup — следующий Demo Day Office for Entrepreneurship. Студенческие команды представят свои проекты университетскому сообществу, менторам и гостям.\n\nСобытие пройдёт 25 ноября 2026 года. Место проведения и ссылка на регистрацию появятся на странице события.\n\nХотите участвовать? Добавьте проект в каталог и отправьте его на рассмотрение.' },
-      KK: { title: 'SDU Founders Cup 25 қарашада өтеді', excerpt: 'Студент-негізін қалаушылар жобаларын сахнада таныстырады. Орны мен тіркелу — іс-шара бетінде.', body: 'SDU Founders Cup — Office for Entrepreneurship ұйымдастыратын келесі Demo Day. Студенттік командалар жобаларын университет қауымдастығына, менторлар мен қонақтарға таныстырады.\n\nІс-шара 2026 жылғы 25 қарашада өтеді. Өтетін орны мен тіркелу сілтемесі іс-шара бетінде жарияланады.\n\nҚатысқыңыз келе ме? Жобаңызды каталогқа қосып, қарауға жіберіңіз.' },
+      RU: { title: 'SDU Founders Cup пройдёт 21 ноября', excerpt: 'Студенты-основатели представят свои проекты на сцене. Регистрация команд открыта на странице события.', body: 'SDU Founders Cup — следующий Demo Day Office for Entrepreneurship. Студенческие команды представят свои проекты университетскому сообществу, менторам и гостям.\n\nСобытие пройдёт 21 ноября 2026 года. Место проведения появится на странице события.\n\nХотите участвовать? Зарегистрируйте команду на странице события: добавьте участников по почте SDU, опишите продукт и загрузите презентацию.' },
+      KK: { title: 'SDU Founders Cup 21 қарашада өтеді', excerpt: 'Студент-негізін қалаушылар жобаларын сахнада таныстырады. Командаларды тіркеу іс-шара бетінде ашық.', body: 'SDU Founders Cup — Office for Entrepreneurship ұйымдастыратын келесі Demo Day. Студенттік командалар жобаларын университет қауымдастығына, менторлар мен қонақтарға таныстырады.\n\nІс-шара 2026 жылғы 21 қарашада өтеді. Өтетін орны іс-шара бетінде жарияланады.\n\nҚатысқыңыз келе ме? Команданы іс-шара бетінде тіркеңіз: қатысушыларды SDU поштасы арқылы қосып, өнімді сипаттап, презентацияны жүктеңіз.' },
     },
   },
   {

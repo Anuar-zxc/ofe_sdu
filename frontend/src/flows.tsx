@@ -12,6 +12,7 @@ import { formatPhone, teamSummary } from "./validation"
 import { listMediaEditors, setMediaEditor } from "./backend"
 import { categoryMeta } from "./cards"
 import { eventDate } from "./event-date"
+import { AdminRegistrations } from "./admin-registrations"
 export function PolicyPage({ go }: { go: Go }) {
   const { policy } = useModel()
   const t = useT()
@@ -437,10 +438,7 @@ export function AdminDashboard({ go }: { go: Go }) {
   const t = useT()
   const { submissions, setSubmissions, events, setEvents, liveMode, isAdmin, authLoading, setAccount } = useModel()
   const [access, setAccess] = useState(false)
-  const [adminEmail, setAdminEmail] = useState('')
-  const [adminPassword, setAdminPassword] = useState('')
-  const [adminError, setAdminError] = useState('')
-  const [section, setSection] = useState("Submissions")
+  const [section, setSection] = useState("Founders Cup")
   const [filter, setFilter] = useState("All")
   const [search, setSearch] = useState("")
   const [editing, setEditing] = useState<Submission | null>(null)
@@ -470,12 +468,7 @@ export function AdminDashboard({ go }: { go: Go }) {
           )}
         </p>
         <div className="button-row">
-          <form className="auth-panel" onSubmit={e => { e.preventDefault(); if (adminEmail.trim().toLowerCase() === '250103081@sdu.edu.kz' && adminPassword === 'OfeDemo2026!') { setAccess(true); setAdminError('') } else { setAdminError('Email or password is incorrect.') } }}>
-            <label>{t('Email')}<input type="email" required autoComplete="username" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} /></label>
-            <label>{t('Password')}<input type="password" required autoComplete="current-password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} /></label>
-            {adminError && <p role="alert" className="form-error">{t(adminError)}</p>}
-            <button className="primary">{t('Sign in')}</button>
-          </form>
+          <button className="primary" onClick={() => setAccess(true)}>{t('Open admin preview')}</button>
           <button className="secondary" onClick={() => go("home")}>
             {t("Back to website")}
           </button>
@@ -492,7 +485,7 @@ export function AdminDashboard({ go }: { go: Go }) {
     <main className="admin-page">
       <aside className="admin-side">
         <div className="admin-brand"><span>O</span><div><strong>OFE</strong><small>{t("Workspace management")}</small></div></div><p className="admin-nav-label">{t("WORKSPACE")}</p>
-        {["Submissions", "Startups", "News", "Media team"].map((x) => (
+        {["Founders Cup", "Submissions", "Startups", "News", "Media team"].map((x) => (
           <button
             className={section === x ? "active" : ""}
             key={x}
@@ -501,7 +494,7 @@ export function AdminDashboard({ go }: { go: Go }) {
               setFilter("All"); setSearch(""); setEditing(null); setRejecting(null); setNotice("")
             }}
           >
-            <i className="admin-nav-icon" aria-hidden="true">{({Submissions: "▤", Startups: "◇", Events: "▦", "Demo Day archive": "◷", News: "✎", "Media team": "◎"} as Record<string,string>)[x]}</i>{t(x)}{x === "Submissions" && <b className="admin-nav-count">{submissions.filter(r => r.status === "Pending").length}</b>}
+            <i className="admin-nav-icon" aria-hidden="true">{({Submissions: "▤", Startups: "◇", Events: "▦", "Demo Day archive": "◷", News: "✎", "Media team": "◎", "Founders Cup": "★"} as Record<string,string>)[x]}</i>{t(x)}{x === "Submissions" && <b className="admin-nav-count">{submissions.filter(r => r.status === "Pending").length}</b>}
           </button>
         ))}
         <div className="admin-side-bottom"><p>{t(liveMode ? 'Changes are saved to the platform.' : 'Changes are saved for this preview session.')}</p><button onClick={() => go("home")}>↗ {t("Back to website")}</button></div>
@@ -509,9 +502,9 @@ export function AdminDashboard({ go }: { go: Go }) {
       </aside>
       <section className="admin-main">
         <div className="admin-breadcrumb">OFE <span>/</span> {t('Workspace management')}{!liveMode && <span className="admin-demo-badge">{t('Preview mode')}</span>}</div>
-        <div className="admin-head"><div><p className="eyebrow">{t('A PLACE FOR NEW IDEAS')}</p><h1>{t(section)}</h1><p className="admin-description">{t(section === 'Submissions' ? 'Review new projects, leave helpful feedback and decide what appears on the website.' : section === 'Startups' ? 'Keep project pages up to date and manage which ones visitors can see.' : section === 'Events' ? 'Bring people together. Add event details, a cover image and publish when ready.' : section === 'News' ? 'Moderate news from the media team: hide or remove posts that should not be on the website.' : section === 'Media team' ? 'Give media access to SDU accounts so they can publish news on the Events page.' : 'Keep the stories and materials from past events in one place.')}</p></div></div>
+        <div className="admin-head"><div><p className="eyebrow">{t('A PLACE FOR NEW IDEAS')}</p><h1>{t(section)}</h1><p className="admin-description">{t(section === 'Submissions' ? 'Review new projects, leave helpful feedback and decide what appears on the website.' : section === 'Startups' ? 'Keep project pages up to date and manage which ones visitors can see.' : section === 'Events' ? 'Bring people together. Add event details, a cover image and publish when ready.' : section === 'Founders Cup' ? 'Team registrations for SDU Founders Cup: review teams, download presentations and confirm participants.' : section === 'News' ? 'Moderate news from the media team: hide or remove posts that should not be on the website.' : section === 'Media team' ? 'Give media access to SDU accounts so they can publish news on the Events page.' : 'Keep the stories and materials from past events in one place.')}</p></div></div>
         {notice && <div className="admin-notice" role="status"><span>✓ {t(notice)}</span><button aria-label={t('Close')} onClick={() => setNotice('')}>×</button></div>}
-        {section === "News" ? <AdminNews go={go} /> : section === "Media team" ? <MediaTeam /> : section === "Events" || section === "Demo Day archive" ? (
+        {section === "Founders Cup" ? <AdminRegistrations /> : section === "News" ? <AdminNews go={go} /> : section === "Media team" ? <MediaTeam /> : section === "Events" || section === "Demo Day archive" ? (
           <div className="event-editors">
             {section === 'Demo Day archive' && !events.some(e => e.id === 'archive') && <button className="secondary" onClick={() => setEvents(rows => [...rows, {id:'archive',title:'Our first Demo Day',date:'',place:'SDU University',published:false,finalists:[]}])}>{t('Create archive')}</button>}
             {section === 'Events' && <button className="secondary" onClick={() => setEvents(rows => [...rows, {id: `event-${Date.now()}`, title: '', date: '', place: '', published: false}])}>{t('Add event')}</button>}

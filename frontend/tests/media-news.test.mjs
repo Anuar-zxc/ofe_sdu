@@ -1,9 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
-import { PGlite } from '@electric-sql/pglite'
-
-const migration = (name) => readFile(new URL(`../supabase/migrations/${name}`, import.meta.url), 'utf8')
+import { supabaseDatabase } from './helpers/database.mjs'
 
 const users = {
   owner: '00000000-0000-0000-0000-000000000101',
@@ -18,34 +15,14 @@ const emails = {
 }
 
 async function database() {
-  const db = new PGlite()
-  await db.exec(`create role anon; create role authenticated; create schema auth;
-    create table auth.users(id uuid primary key, email text, email_confirmed_at timestamptz, raw_user_meta_data jsonb not null default '{}'::jsonb);
-    create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
-    create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
-    create schema storage;
-    create table storage.buckets(id text primary key, name text not null, public boolean not null default false, file_size_limit bigint, allowed_mime_types text[]);
-    create table storage.objects(id bigint generated always as identity primary key, bucket_id text not null references storage.buckets(id), name text not null unique);
-    alter table storage.objects enable row level security;
-    grant usage on schema auth,public,storage to anon,authenticated;
-    grant execute on function auth.uid(), auth.jwt() to anon,authenticated;
-    grant select on storage.objects to anon,authenticated;
-    grant insert,update,delete on storage.objects to authenticated;
-    grant usage,select on sequence storage.objects_id_seq to authenticated;`)
-  for (const [key, id] of Object.entries(users)) {
-    await db.query('insert into auth.users(id,email,email_confirmed_at) values ($1,$2,now())', [id, emails[key]])
-  }
-  await db.query("insert into auth.users(id,email) values ('00000000-0000-0000-0000-000000000199','unconfirmed@sdu.edu.kz')")
-  await db.exec(await migration('20261022_accounts.sql'))
-  await db.query('insert into public.app_admins(user_id) values ($1)', [users.admin])
-  await db.exec(await migration('20261023071333_database_foundation.sql'))
-  await db.exec(await migration('20261113120000_media_news_members_contacts.sql'))
-  const login = async (who) => {
-    await db.exec('reset role')
-    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [who ? users[who] : ''])
-    await db.query("select set_config('request.jwt.claims',$1,false)", [who ? JSON.stringify({ sub: users[who], email: emails[who] }) : ''])
-    await db.exec(`set role ${who ? 'authenticated' : 'anon'}`)
-  }
+  const { db, login: signIn } = await supabaseDatabase({
+    users: Object.fromEntries(Object.entries(users).map(([key, id]) => [id, emails[key]])),
+    admins: [users.admin],
+    before: { '20261113120000_media_news_members_contacts.sql': async db => {
+      await db.query("insert into auth.users(id,email) values ('00000000-0000-0000-0000-000000000199','unconfirmed@sdu.edu.kz')")
+    } },
+  })
+  const login = who => signIn(who ? users[who] : null, who ? emails[who] : undefined)
   return { db, login }
 }
 

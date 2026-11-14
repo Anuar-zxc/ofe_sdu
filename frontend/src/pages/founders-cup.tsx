@@ -3,8 +3,10 @@ import { eventDate } from '../event-date'
 import { StorageImage } from '../storage'
 import { useModel, useT, type EventData } from '../model'
 import { Link } from '../router'
+import { registrationDeadline, registrationIsOpen } from './register'
+import { Icon } from '../ui'
 
-export function Countdown({ date = "2026-11-25" }: { date?: string }) {
+export function Countdown({ date = "2026-11-21" }: { date?: string }) {
   const t = useT()
   const calculate = () => {
     const diff = Math.max(
@@ -43,7 +45,7 @@ export function FoundersCup() {
   const t = useT()
   const { events, lang } = useModel()
   const publishedEvent = events.find((e) => e.id === "current" && e.published) ?? events.find(e => e.id !== "archive" && e.published && e.date)
-  const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-25',place:'Venue to be confirmed',published:false}
+  const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-21',place:'Venue to be confirmed',published:false}
   const past = events.find((e) => e.id === "archive" && e.published)
   const registrationUrl = externalUrl(current.registrationUrl || import.meta.env.VITE_EVENT_REGISTRATION_URL)
   const archiveUrl = '/archive.html'
@@ -61,6 +63,10 @@ return (
             <h1><span className="event-title-university">SDU</span><span className="event-title-name">FOUNDERS CUP</span></h1>
             <p className="event-hero-description">{t('Meet student founders, discover fresh ideas and connect with the OFE community.')}</p>
             <div className="event-countdown"><span className="event-countdown-label">{t('Until we meet')}</span><Countdown date={current.date} /></div>
+            <div className="event-register-cta">
+              <Link to="register" className="btn btn-accent btn-lg">{t(registrationIsOpen(current) ? 'Register your team' : 'Team registration')}<Icon name="arrow" size={18} /></Link>
+              <span>{t(registrationIsOpen(current) ? 'Registration is open until' : 'Registration closed on')} {new Intl.DateTimeFormat(lang === 'KK' ? 'kk-KZ' : lang === 'RU' ? 'ru-RU' : 'en-GB', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Almaty' }).format(new Date(registrationDeadline(current).getTime() - 60000))}</span>
+            </div>
           </div>
           <aside className="event-ticket" aria-label={t('Event details')}>
             <div className="event-poster" aria-hidden="true"><div className="event-poster-meta"><span>SDU · OFE</span><span>{current.date.split('-').reverse().join(' · ')}</span></div><div className="event-poster-type"><span>FOUNDERS</span><span>CUP<span className="poster-arrow">↗</span></span></div><svg className="poster-spark" viewBox="0 0 100 100"><path d="M50 0 58 32 85 15 68 42 100 50 68 58 85 85 58 68 50 100 42 68 15 85 32 58 0 50 32 42 15 15 42 32Z" /></svg><span className="event-poster-footer">{t('IDEAS BECOME REAL')}</span></div>
@@ -71,7 +77,7 @@ return (
             </div>
             <div className="event-location"><span className="event-location-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><div><span className="event-field-label">{t('PLACE')}</span><strong>{t(current.place)}</strong><small>{t('Follow this page for event updates.')}</small></div></div>
             <div className="ticket-perforation" aria-hidden="true" />
-            {registrationUrl ? <a className="event-register" href={registrationUrl} target="_blank" rel="noopener noreferrer">{t('Register to attend')}<span aria-hidden="true">↗</span></a> : <button className="event-register" disabled>{t('Registration opens soon')}<span aria-hidden="true">↗</span></button>}
+            {registrationIsOpen(current) ? <Link to="register" className="event-register">{t('Register your team')}<span aria-hidden="true">↗</span></Link> : registrationUrl ? <a className="event-register" href={registrationUrl} target="_blank" rel="noopener noreferrer">{t('Register to attend')}<span aria-hidden="true">↗</span></a> : <Link to="register" className="event-register">{t('Team registration')}<span aria-hidden="true">↗</span></Link>}
             <button className="event-calendar" onClick={() => {
               const escape = (value: string) => value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
               const date = current.date.replace(/-/g, '')

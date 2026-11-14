@@ -29,7 +29,7 @@ function clearAuthRedirectParams() {
   if (hasCallbackHash) redirectUrl.hash = redirectHash.toString()
   window.history.replaceState(window.history.state, '', redirectUrl.pathname + redirectUrl.search + redirectUrl.hash)
 }
-export const backend = liveMode ? createClient(url!, key!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null
+export const backend = liveMode ? createClient(url!, key!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } }) : null
 
 type State = { submissions: Submission[]; events: EventData[]; news: NewsPost[]; userId: string | null; userEmail: string; isAdmin: boolean; isMediaEditor: boolean }
 type Kind = 'submissions' | 'events' | 'news'

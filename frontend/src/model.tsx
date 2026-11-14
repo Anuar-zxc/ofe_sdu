@@ -30,6 +30,8 @@ export type Finalist = { id:string; name:string; members:string; description:str
 export type EventData = {
   finalists?: Finalist[]
   registrationUrl?: string
+  registrationDeadline?: string
+  registration?: 'open' | 'closed'
   externalUrl?: string
   image?: string
   id: string

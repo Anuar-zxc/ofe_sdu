@@ -11,6 +11,7 @@ import { FoundersCup } from './pages/founders-cup'
 import { Home } from './pages/home'
 import { MediaDesk } from './pages/media-desk'
 import { ProjectProfile, Projects } from './pages/projects'
+import { Register } from './pages/register'
 import { RouterContext, parseLocation, pathFor, prefersReducedMotion, withTransition, type Page, type Route } from './router'
 import { TeamProvider, Teams } from './teams'
 import { useReveal } from './ui'
@@ -20,7 +21,7 @@ import './translations-ofe'
 
 const pageTitles: Record<Page, string> = {
   home: 'Office for Entrepreneurship', about: 'About us', startups: 'Project catalog', profile: 'Project', teams: 'Teams',
-  events: 'Events and news', news: 'News', demo: 'SDU Founders Cup', apply: 'My workspace', admin: 'Workspace management', media: 'Media desk', policy: 'Policies',
+  events: 'Events and news', news: 'News', demo: 'SDU Founders Cup', register: 'Team registration', apply: 'My workspace', admin: 'Workspace management', media: 'Media desk', policy: 'Policies',
 }
 
 function DetailDialog({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
@@ -146,6 +147,7 @@ export default function App() {
           {page === 'events' && <Events />}
           {page === 'news' && <NewsArticle />}
           {page === 'demo' && <FoundersCup />}
+          {page === 'register' && <Register />}
           {page === 'media' && <MediaDesk />}
           {page === 'apply' && (platform.isAdmin ? <AdminDashboard go={go} /> : <div id="main" className="workspace-shell"><Application go={go} /></div>)}
           {page === 'admin' && <AdminDashboard go={go} />}

@@ -123,7 +123,7 @@ export function Home() {
             <p className="kicker kicker-on-dark">{t('NEXT DEMO DAY')}</p>
             <h2>SDU Founders Cup</h2>
             <p>{eventDate(current.date, lang).full} · {t(current.place)}</p>
-            <Link to="demo" className="btn btn-accent">{t('View Demo Day')}<Icon name="arrow" size={18} /></Link>
+            <div className="button-group"><Link to="register" className="btn btn-accent">{t('Register your team')}<Icon name="arrow" size={18} /></Link><Link to="demo" className="btn btn-on-dark">{t('About the event')}</Link></div>
           </div>
           <div className="event-banner-timer"><span>{t('Until we meet')}</span><Countdown date={current.date} /></div>
         </div>

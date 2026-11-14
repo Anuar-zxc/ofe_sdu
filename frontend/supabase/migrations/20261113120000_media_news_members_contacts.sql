@@ -1,7 +1,11 @@
 -- Office for Entrepreneurship: media moderators, news, team members by SDU email
 -- and private project contacts. Apply after the existing migrations, once.
 -- Nothing here changes existing rows. Private data lives outside projects.data,
--- because published project rows are readable by anyone.
+-- because published project rows are readable by anyone. Privileged helpers live
+-- in the private schema, which PostgREST does not expose.
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to anon, authenticated;
 
 -- 1. Media moderators -------------------------------------------------------
 create table public.app_media_editors (
@@ -12,12 +16,19 @@ create table public.app_media_editors (
 alter table public.app_media_editors enable row level security;
 revoke all on table public.app_media_editors from anon, authenticated;
 
-create or replace function public.is_media_editor()
+create or replace function private.is_media_editor()
 returns boolean language sql stable security definer set search_path = ''
 as $$
   select exists(select 1 from public.app_media_editors where user_id = (select auth.uid()))
-    or public.is_admin()
+    or private.is_admin()
 $$;
+revoke all on function private.is_media_editor() from public, anon, authenticated;
+grant execute on function private.is_media_editor() to anon, authenticated;
+
+-- API-visible wrapper so the site can ask "may I publish news?".
+create or replace function public.is_media_editor()
+returns boolean language sql stable security invoker set search_path = ''
+as $$ select private.is_media_editor() $$;
 revoke all on function public.is_media_editor() from public;
 grant execute on function public.is_media_editor() to anon, authenticated;
 
@@ -26,7 +37,7 @@ returns table(email text, added_at timestamptz)
 language plpgsql stable security definer set search_path = ''
 as $$
 begin
-  if not public.is_admin() then
+  if not private.is_admin() then
     raise exception 'Administrator access required';
   end if;
   return query select m.email, m.added_at from public.app_media_editors m order by m.added_at;
@@ -45,7 +56,7 @@ declare
   normalized text := lower(btrim(coalesce(target_email, '')));
   target uuid;
 begin
-  if not public.is_admin() then
+  if not private.is_admin() then
     raise exception 'Administrator access required';
   end if;
   if normalized !~ '^[a-z0-9._%+-]+@sdu\.edu\.kz$' then
@@ -96,28 +107,28 @@ grant insert (id, data), update (data), delete on table public.news to authentic
 
 create policy news_read on public.news for select
 to anon, authenticated
-using (data->>'published' = 'true' or (select public.is_media_editor()));
+using (data->>'published' = 'true' or (select private.is_media_editor()));
 create policy news_insert on public.news for insert
 to authenticated
-with check ((select public.is_media_editor()) and author_id = (select auth.uid()));
+with check ((select private.is_media_editor()) and author_id = (select auth.uid()));
 create policy news_update on public.news for update
 to authenticated
-using ((select public.is_media_editor()))
-with check ((select public.is_media_editor()));
+using ((select private.is_media_editor()))
+with check ((select private.is_media_editor()));
 create policy news_delete on public.news for delete
 to authenticated
-using ((select public.is_media_editor()));
+using ((select private.is_media_editor()));
 
-create or replace function public.touch_news_updated_at()
+create or replace function private.touch_updated_at()
 returns trigger language plpgsql set search_path = '' as $$
 begin
   new.updated_at := now();
   return new;
 end
 $$;
-revoke all on function public.touch_news_updated_at() from public, anon, authenticated;
+revoke all on function private.touch_updated_at() from public, anon, authenticated;
 create trigger touch_news_updated_at before update on public.news
-for each row execute function public.touch_news_updated_at();
+for each row execute function private.touch_updated_at();
 
 -- Public cover images for news. Anyone can view; only media editors write.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -125,18 +136,18 @@ values ('news-media', 'news-media', true, 5242880, array['image/webp', 'image/jp
 on conflict (id) do nothing;
 create policy news_media_insert on storage.objects for insert
 to authenticated
-with check (bucket_id = 'news-media' and (select public.is_media_editor()));
+with check (bucket_id = 'news-media' and storage.allow_only_operation('object.upload') and (select private.is_media_editor()));
 create policy news_media_update on storage.objects for update
 to authenticated
-using (bucket_id = 'news-media' and (select public.is_media_editor()))
-with check (bucket_id = 'news-media' and (select public.is_media_editor()));
+using (bucket_id = 'news-media' and storage.allow_only_operation('object.upload_update') and (select private.is_media_editor()))
+with check (bucket_id = 'news-media' and (select private.is_media_editor()));
 create policy news_media_delete on storage.objects for delete
 to authenticated
-using (bucket_id = 'news-media' and (select public.is_media_editor()));
+using (bucket_id = 'news-media' and storage.allow_any_operation(array['object.delete', 'object.delete_many']) and (select private.is_media_editor()));
 
 -- 3. Private project contacts and members ------------------------------------
 -- Security-definer helpers avoid policy recursion between projects and members.
-create or replace function public.owns_project(target_project_id text)
+create or replace function private.owns_project(target_project_id text)
 returns boolean language sql stable security definer set search_path = ''
 as $$
   select exists(
@@ -144,16 +155,18 @@ as $$
     where p.id = target_project_id and p.owner_id = (select auth.uid())
   )
 $$;
-revoke all on function public.owns_project(text) from public, anon;
-grant execute on function public.owns_project(text) to authenticated;
+revoke all on function private.owns_project(text) from public, anon, authenticated;
+grant execute on function private.owns_project(text) to authenticated;
 
-create or replace function public.current_sdu_email()
+-- The email in the verified JWT. Accounts can only be created with @sdu.edu.kz
+-- addresses (see the registration migration), so this is a corporate address.
+create or replace function private.current_email()
 returns text language sql stable set search_path = ''
 as $$
   select lower(coalesce((select auth.jwt()->>'email'), ''))
 $$;
-revoke all on function public.current_sdu_email() from public, anon;
-grant execute on function public.current_sdu_email() to authenticated;
+revoke all on function private.current_email() from public, anon, authenticated;
+grant execute on function private.current_email() to authenticated;
 
 create table public.project_contacts (
   project_id text primary key references public.projects(id) on delete cascade,
@@ -167,14 +180,14 @@ grant select, insert, update on table public.project_contacts to authenticated;
 
 create policy project_contact_read on public.project_contacts for select
 to authenticated
-using ((select public.owns_project(project_id)) or (select public.is_admin()));
+using ((select private.owns_project(project_id)) or (select private.is_admin()));
 create policy project_contact_insert on public.project_contacts for insert
 to authenticated
-with check ((select public.owns_project(project_id)));
+with check ((select private.owns_project(project_id)));
 create policy project_contact_update on public.project_contacts for update
 to authenticated
-using ((select public.owns_project(project_id)))
-with check ((select public.owns_project(project_id)));
+using ((select private.owns_project(project_id)))
+with check ((select private.owns_project(project_id)));
 
 create table public.project_members (
   project_id text not null references public.projects(id) on delete cascade,
@@ -188,32 +201,32 @@ alter table public.project_members enable row level security;
 revoke all on table public.project_members from anon, authenticated;
 grant select, insert, delete on table public.project_members to authenticated;
 
-create or replace function public.is_project_member(target_project_id text)
+create or replace function private.is_project_member(target_project_id text)
 returns boolean language sql stable security definer set search_path = ''
 as $$
   select exists(
     select 1 from public.project_members m
-    where m.project_id = target_project_id and m.email = public.current_sdu_email()
+    where m.project_id = target_project_id and m.email = private.current_email()
   )
 $$;
-revoke all on function public.is_project_member(text) from public, anon;
-grant execute on function public.is_project_member(text) to authenticated;
+revoke all on function private.is_project_member(text) from public, anon, authenticated;
+grant execute on function private.is_project_member(text) to authenticated;
 
 create policy project_member_read on public.project_members for select
 to authenticated
 using (
-  (select public.owns_project(project_id))
-  or (select public.is_admin())
-  or email = (select public.current_sdu_email())
+  (select private.owns_project(project_id))
+  or (select private.is_admin())
+  or email = (select private.current_email())
 );
 create policy project_member_insert on public.project_members for insert
 to authenticated
-with check ((select public.owns_project(project_id)));
+with check ((select private.owns_project(project_id)));
 create policy project_member_delete on public.project_members for delete
 to authenticated
-using ((select public.owns_project(project_id)));
+using ((select private.owns_project(project_id)));
 
 -- Team members may see the project they were added to, even before publication.
 create policy project_read_member on public.projects for select
 to authenticated
-using ((select public.is_project_member(id)));
+using ((select private.is_project_member(id)));
